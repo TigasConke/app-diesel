@@ -1,0 +1,11 @@
+.main-content.main-content-form {
+    flex-grow: 1;
+    background-color: #f8f9fa;
+}
+.form-card {
+    padding: 2rem;
+    width: 100%;
+}
+.form-title {
+    margin-bottom: 2rem;
+}

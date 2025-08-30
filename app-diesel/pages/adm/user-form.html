@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Usuário</title>
+
+    <link rel="stylesheet" href="../../bootstrap5/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <link rel="stylesheet" href="../../assets/css/forms.css">
+
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+
+</head>
+<body>
+
+    <header id="app-header" class="d-flex justify-content-between align-items-center px-3">
+        <div class="d-flex align-items-center">
+              <button class="btn d-lg-none me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">
+                  <i class="fas fa-bars text-white"></i>
+              </button>
+            <h1 class="logo-text">Logo</h1>
+        </div>
+        <button class="btn btn-light"> <i class="fa-solid fa-arrow-right-from-bracket"></i> Sair</button>
+    </header>
+
+    <div class="main-container d-lg-flex">
+        <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+            <div class="offcanvas-header d-lg-none">
+                <h5 class="offcanvas-title" id="sidebarLabel">Menu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body p-0">
+                <aside class="sidebar-nav">
+                    <div class="sidebar-header d-flex align-items-center p-3">
+                        <div class="user-icon-wrapper me-3">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span>Administrador</span>
+                    </div>
+                    <nav class="nav flex-column">
+                        <a class="nav-link" href="tabela-os.html"><i class="fas fa-wrench"></i> Ordens de Serviço</a>
+                        <a class="nav-link" href="tabela-cliente.html"><i class="fas fa-users"></i> Clientes</a>
+                        <a class="nav-link active" href="tabela-user.html"><i class="fas fa-user-friends"></i> Usuários</a>
+                        <a class="nav-link" href="tabela-produto.html"><i class="fa-solid fa-box-open"></i> Produtos</a>
+                        <a class="nav-link" href="tabela-relatorio.html"><i class="fas fa-chart-bar"></i> Relatórios</a>
+                    </nav>
+                </aside>
+            </div>
+        </div>
+        
+        <main class="main-content main-content-form">
+            <div class="form-card">
+                <h2 class="form-title">Cadastro de Usuário</h2>
+
+                <form id="form-usuario" action="/caminho/para/backend/usuario" method="POST">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <label for="nome" class="form-label">Nome</label>
+                                <input type="text" class="form-control" id="nome" name="nome" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="rg" class="form-label">RG</label>
+                                <input type="text" class="form-control" id="rg" name="rg">
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="confirmar_senha" class="form-label">Confirmar Senha</label>
+                                <input type="password" class="form-control" id="confirmar_senha" name="confirmar_senha" required>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <label for="data_nascimento" class="form-label">Data de Nascimento</label>
+                                <input type="date" class="form-control" id="data_nascimento" name="data_nascimento">
+                            </div>
+                            <div class="mb-3">
+                                <label for="cpf" class="form-label">CPF</label>
+                                <input type="text" class="form-control" id="cpf" name="cpf" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="senha" class="form-label">Senha</label>
+                                <input type="password" class="form-control" id="senha" name="senha" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label d-block mb-2">Tipo</label>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="tipo_usuario" id="tipo_admin" value="admin" checked>
+                                <label class="form-check-label" for="tipo_admin">Administrador</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="tipo_usuario" id="tipo_funcionario" value="funcionario">
+                                <label class="form-check-label" for="tipo_funcionario">Funcionário</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label d-block mb-2">Estado</label>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="estado_usuario" id="estado_ativo" value="ativo" checked>
+                                <label class="form-check-label" for="estado_ativo">Ativo</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="estado_usuario" id="estado_desativado" value="desativado">
+                                <label class="form-check-label" for="estado_desativado">Desativado</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-4">
+                        <button type="button" class="btn btn-danger me-2" id="btn-cancelar">Cancelar</button>
+                        <button type="submit" class="btn btn-success">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../bootstrap5/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="../../assets/js/script.js"></script>
+    <script src="../../assets/js/forms.js"></script>
+</body>
+</html>
