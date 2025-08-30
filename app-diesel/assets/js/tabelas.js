@@ -510,3 +510,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// Adicione este código ao seu arquivo tabelas.js ou um novo script
+document.addEventListener('DOMContentLoaded', async () => {
+    // Verificamos qual página está ativa para rodar o código certo
+    if (window.location.pathname.includes('tabela-user.html')) {
+        console.log("Página de usuários. Buscando dados...");
+
+        try {
+            // Usamos nossa nova função em vez do fetch padrão
+            const response = await authenticatedFetch('/usuario');
+
+            if (response && response.ok) {
+                const usuarios = await response.json();
+                console.log('Usuários recebidos do backend:', usuarios);
+                // Aqui você colocaria a lógica para preencher sua tabela com os dados
+            } else {
+                 console.error('Falha ao buscar usuários:', response ? response.statusText : 'Sem resposta');
+            }
+        } catch (error) {
+            console.error('Erro ao conectar com a API:', error);
+        }
+    }
+});
