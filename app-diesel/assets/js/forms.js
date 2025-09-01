@@ -65,10 +65,18 @@ $(document).ready(function() {
         e.target.value = value;
     };
 
-    // Aplicação inteligente das máscaras
+    const handleRgInput = (e) => {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 9) value = value.substring(0, 9);
+        value = value.replace(/^(\d{2})(\d{3})(\d{3})(\w{1}).*/, '$1.$2.$3-$4');
+        e.target.value = value;
+    };
+
+    // Aplicação inteligente das máscaras a qualquer campo com o ID correspondente
     if ($('#cpf').length) $('#cpf').on('input', handleCpfCnpjInput);
     if ($('#cpf_cnpj').length) $('#cpf_cnpj').on('input', handleCpfCnpjInput);
     if ($('#telefone').length) $('#telefone').on('input', handleTelefoneInput);
+    if ($('#rg').length) $('#rg').on('input', handleRgInput);
     
     // ====================================================================
     // LÓGICA DE BOTÕES GERAIS

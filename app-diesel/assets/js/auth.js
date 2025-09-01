@@ -9,22 +9,60 @@ function getToken() {
     return null;
 }
 
-// Nosso "Guardião". Verifica se o usuário tem um token.
-// Se não tiver, redireciona para a página de login.
-function checkAuth() {
-    const token = getToken();
+// Função para decodificar o token JWT e pegar os dados (payload)
+function parseJwt(token) {
     if (!token) {
-        // Se o caminho atual não for a página de login, redireciona.
-        // O replace evita que o usuário use o botão "voltar" do navegador para acessar a página protegida.
-        if (window.location.pathname !== '/index.html' && window.location.pathname !== '/') {
-             window.location.replace('/index.html');
-        }
+        return null;
+    }
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+
+        return JSON.parse(jsonPayload);
+    } catch (e) {
+        return null; // Retorna nulo se o token for inválido
     }
 }
 
+// Nosso "Guardião" atualizado com verificação de cargo
+function checkAuth() {
+    const token = getToken();
+
+    // 1. Se não há token, expulsa para o login
+    if (!token) {
+        if (window.location.pathname !== '/index.html' && window.location.pathname !== '/') {
+             window.location.replace('/index.html');
+        }
+        return; // Para a execução aqui
+    }
+
+    // 2. Se há token, decodifica para pegar o cargo
+    const userData = parseJwt(token);
+    if (!userData || !userData.role) {
+        logout(); // Se o token for inválido, desloga
+        return;
+    }
+
+    const userRole = userData.role; // 'admin' ou 'colaborador'
+    const currentPath = window.location.pathname;
+
+    // 3. Verifica as permissões
+    // Se for admin e estiver fora da pasta /adm/
+    if (userRole === 'admin' && !currentPath.startsWith('/pages/adm/')) {
+        window.location.replace('/pages/adm/tabela-os.html');
+    }
+    // Se for colaborador e estiver fora da pasta /funcionario/
+    else if (userRole === 'colaborador' && !currentPath.startsWith('/pages/funcionario/')) {
+         window.location.replace('/pages/funcionario/tabela-os-funcionario.html');
+    }
+}
+
+
 // Função para fazer logout
 function logout() {
-    // Apaga o cookie do token e redireciona para o login
     document.cookie = 'access_token=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT';
     window.location.replace('/index.html');
 }
@@ -33,7 +71,7 @@ function logout() {
 async function authenticatedFetch(url, options = {}) {
     const token = getToken();
     if (!token) {
-        checkAuth(); // Redireciona se não houver token
+        checkAuth();
         return;
     }
 
@@ -45,9 +83,8 @@ async function authenticatedFetch(url, options = {}) {
 
     const response = await fetch(`http://localhost:3000${url}`, { ...options, headers });
 
-    // Se o token for inválido/expirado, o backend retornará 401
     if (response.status === 401) {
-        logout(); // Desloga o usuário
+        logout();
         return;
     }
 
@@ -55,4 +92,13 @@ async function authenticatedFetch(url, options = {}) {
 }
 
 // Executa a verificação de autenticação assim que o script é carregado
-checkAuth();
+// Exceto na página de login
+if (window.location.pathname !== '/index.html' && window.location.pathname !== '/') {
+    checkAuth();
+}
+
+// Função para que outros scripts possam pegar os dados do usuário
+function getUserData() {
+    const token = getToken();
+    return parseJwt(token);
+}

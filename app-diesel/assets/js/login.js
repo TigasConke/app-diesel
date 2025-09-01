@@ -5,6 +5,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const togglePassword = document.getElementById('togglePassword');
     const errorMessage = document.getElementById('error-message');
 
+    // Função para decodificar o token (copiada de auth.js para uso local)
+    function parseJwt(token) {
+        try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        } catch (e) {
+            return null;
+        }
+    }
+
     if (togglePassword) {
         togglePassword.addEventListener('click', function () {
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
@@ -16,7 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (loginForm) {
         loginForm.addEventListener('submit', async (event) => {
-            event.preventDefault(); // Impede o envio padrão do formulário
+            event.preventDefault();
+            errorMessage.style.display = 'none';
 
             const email = emailInput.value;
             const password = passwordInput.value;
@@ -32,10 +47,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (response.ok) {
                     const data = await response.json();
+                    const token = data.access_token;
+
                     // Salva o token nos cookies
-                    document.cookie = `access_token=${data.access_token};path=/;max-age=604800`; // 7 dias
-                    // Redireciona para a página principal do sistema
-                    window.location.href = 'pages/adm/tabela-os.html';
+                    document.cookie = `access_token=${token};path=/;max-age=604800`; // 7 dias
+
+                    // Decodifica o token para saber o cargo
+                    const userData = parseJwt(token);
+
+                    if (userData && userData.role === 'admin') {
+                        window.location.href = 'pages/adm/tabela-os.html';
+                    } else if (userData && userData.role === 'colaborador') {
+                        window.location.href = 'pages/funcionario/tabela-os-funcionario.html';
+                    } else {
+                        // Fallback, caso o cargo não seja reconhecido
+                        errorMessage.textContent = 'Cargo de usuário não reconhecido.';
+                        errorMessage.style.display = 'block';
+                    }
                 } else {
                     const errorData = await response.json();
                     errorMessage.textContent = errorData.message || 'Email ou senha inválidos.';

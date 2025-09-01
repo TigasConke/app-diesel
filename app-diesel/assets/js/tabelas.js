@@ -1,6 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // ===================================================================
+    // Início Tabelas com dados fictícios (hardcode)
+    // ===================================================================
+
+
+    // ===================================================================
     // LÓGICA PARA A PÁGINA DE ORDENS DE SERVIÇO
     // ===================================================================
     if (document.getElementById('osTableBody')) {
@@ -532,3 +537,184 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 });
+
+    // ===================================================================
+    // Fim Tabelas com dados fictícios (hardcode)
+    // ===================================================================
+
+    // ===================================================================
+    // Início Tabelas com dados puxados do banco de dados
+    // ===================================================================
+document.addEventListener('DOMContentLoaded', () => {
+
+    if (window.location.pathname.includes('tabela-user.html')) {
+        
+        let allUsers = [];
+        let filteredUsers = [];
+        let currentPage = 1;
+        const rowsPerPage = 10;
+
+        const tableBody = document.getElementById('user-table-body');
+        const searchInput = document.getElementById('search-input');
+        const cargoFilter = document.getElementById('cargo-filter');
+        const statusFilter = document.getElementById('status-filter');
+        const sortSelect = document.getElementById('sort-select');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const noResults = document.getElementById('no-results');
+        const paginationControls = document.getElementById('pagination-controls');
+        const resultsInfo = document.getElementById('results-info');
+        const paginationList = document.getElementById('pagination-list');
+
+        const renderTablePage = () => {
+            tableBody.innerHTML = '';
+            noResults.style.display = 'none';
+            
+            if (filteredUsers.length === 0) {
+                noResults.style.display = 'block';
+                paginationControls.style.display = 'none';
+                return;
+            }
+
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const endIndex = Math.min(startIndex + rowsPerPage, filteredUsers.length);
+            const pageUsers = filteredUsers.slice(startIndex, endIndex);
+
+            pageUsers.forEach(user => {
+                const statusClass = user.status === 'ativo' ? 'badge bg-success' : 'badge bg-danger';
+                const cargoFormatted = user.cargo.charAt(0).toUpperCase() + user.cargo.slice(1);
+                
+                const row = `
+                    <tr>
+                        <td>${user.id}</td>
+                        <td>${user.nome}</td>
+                        <td>${user.email}</td>
+                        <td>${cargoFormatted}</td>
+                        <td><span class="${statusClass}">${user.status}</span></td>
+                        <td>
+                            <a href="user-detalhes.html?id=${user.id}" class="btn btn-sm btn-info" title="Visualizar"><i class="fas fa-eye"></i></a>
+                            <a href="user-form.html?id=${user.id}" class="btn btn-sm btn-warning" title="Editar"><i class="fas fa-pencil-alt"></i></a>
+                        </td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+            updatePagination(startIndex, endIndex);
+        };
+
+        const updatePagination = (startIndex, endIndex) => {
+            const totalPages = Math.ceil(filteredUsers.length / rowsPerPage);
+            paginationList.innerHTML = ''; // Limpa botões antigos
+
+            if (totalPages <= 1) {
+                paginationControls.style.display = 'none';
+                return;
+            }
+            
+            paginationControls.style.display = 'flex';
+            resultsInfo.textContent = `Exibindo ${startIndex + 1} a ${endIndex} de ${filteredUsers.length} resultados`;
+
+            // Botão "Anterior"
+            const prevLi = document.createElement('li');
+            prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+            prevLi.innerHTML = `<a class="page-link" href="#">Anterior</a>`;
+            prevLi.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderTablePage();
+                }
+            });
+            paginationList.appendChild(prevLi);
+
+            // Botões de página (lógica simplificada para mostrar até 5 botões)
+             for (let i = 1; i <= totalPages; i++) {
+                const pageLi = document.createElement('li');
+                pageLi.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                pageLi.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+                pageLi.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    currentPage = i;
+                    renderTablePage();
+                });
+                paginationList.appendChild(pageLi);
+            }
+
+            // Botão "Próxima"
+            const nextLi = document.createElement('li');
+            nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+            nextLi.innerHTML = `<a class="page-link" href="#">Próxima</a>`;
+            nextLi.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderTablePage();
+                }
+            });
+            paginationList.appendChild(nextLi);
+        };
+        
+        const applyFiltersAndSort = () => {
+            let tempUsers = [...allUsers];
+            const searchTerm = searchInput.value.toLowerCase();
+            const cargo = cargoFilter.value;
+            const status = statusFilter.value;
+            const [sortColumn, sortDirection] = sortSelect.value.split('-');
+
+            if (searchTerm) {
+                tempUsers = tempUsers.filter(user =>
+                    user.nome.toLowerCase().includes(searchTerm) ||
+                    user.email.toLowerCase().includes(searchTerm) ||
+                    (user.cpf && user.cpf.includes(searchTerm))
+                );
+            }
+            if (cargo) {
+                tempUsers = tempUsers.filter(user => user.cargo === cargo);
+            }
+            if (status) {
+                tempUsers = tempUsers.filter(user => user.status === status);
+            }
+
+            tempUsers.sort((a, b) => {
+                const aValue = a[sortColumn];
+                const bValue = b[sortColumn];
+                const comparison = (aValue > bValue) ? 1 : ((bValue > aValue) ? -1 : 0);
+                return sortDirection === 'asc' ? comparison : comparison * -1;
+            });
+            
+            filteredUsers = tempUsers;
+            currentPage = 1;
+            renderTablePage();
+        };
+
+        searchInput.addEventListener('input', applyFiltersAndSort);
+        cargoFilter.addEventListener('change', applyFiltersAndSort);
+        statusFilter.addEventListener('change', applyFiltersAndSort);
+        sortSelect.addEventListener('change', applyFiltersAndSort);
+
+        const fetchUsers = async () => {
+            loadingIndicator.style.display = 'block';
+            tableBody.innerHTML = '';
+            try {
+                const response = await authenticatedFetch('/usuario');
+                if (!response.ok) throw new Error('Falha ao carregar usuários.');
+                allUsers = await response.json();
+                applyFiltersAndSort();
+            } catch (error) {
+                console.error("Erro ao buscar usuários:", error);
+                tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Erro ao carregar dados.</td></tr>`;
+            } finally {
+                loadingIndicator.style.display = 'none';
+            }
+        };
+
+        fetchUsers();
+    }
+});
+
+
+
+
+
+
+
+
