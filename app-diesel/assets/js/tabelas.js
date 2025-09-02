@@ -545,8 +545,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ===================================================================
     // Início Tabelas com dados puxados do banco de dados
     // ===================================================================
+
+
 document.addEventListener('DOMContentLoaded', () => {
 
+    // LÓGICA FUNCIONAL PARA A TABELA DE USUÁRIOS (BASEADA NO SEU CÓDIGO)
     if (window.location.pathname.includes('tabela-user.html')) {
         
         let allUsers = [];
@@ -559,19 +562,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const cargoFilter = document.getElementById('cargo-filter');
         const statusFilter = document.getElementById('status-filter');
         const sortSelect = document.getElementById('sort-select');
-        const loadingIndicator = document.getElementById('loading-indicator');
-        const noResults = document.getElementById('no-results');
         const paginationControls = document.getElementById('pagination-controls');
         const resultsInfo = document.getElementById('results-info');
         const paginationList = document.getElementById('pagination-list');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const noResults = document.getElementById('no-results');
 
         const renderTablePage = () => {
             tableBody.innerHTML = '';
-            noResults.style.display = 'none';
+            if (noResults) noResults.style.display = 'none';
             
             if (filteredUsers.length === 0) {
-                noResults.style.display = 'block';
-                paginationControls.style.display = 'none';
+                if (noResults) noResults.style.display = 'block';
+                if (paginationControls) paginationControls.style.display = 'none';
                 return;
             }
 
@@ -590,7 +593,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td>${user.email}</td>
                         <td>${cargoFormatted}</td>
                         <td><span class="${statusClass}">${user.status}</span></td>
-                        <td>
+                        <td class="text-center">
                             <a href="user-detalhes.html?id=${user.id}" class="btn btn-sm btn-info" title="Visualizar"><i class="fas fa-eye"></i></a>
                             <a href="user-form.html?id=${user.id}" class="btn btn-sm btn-warning" title="Editar"><i class="fas fa-pencil-alt"></i></a>
                         </td>
@@ -603,15 +606,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const updatePagination = (startIndex, endIndex) => {
             const totalPages = Math.ceil(filteredUsers.length / rowsPerPage);
-            paginationList.innerHTML = ''; // Limpa botões antigos
+            if (paginationList) paginationList.innerHTML = ''; 
 
             if (totalPages <= 1) {
-                paginationControls.style.display = 'none';
+                if (paginationControls) paginationControls.style.display = 'none';
+                if (resultsInfo) resultsInfo.textContent = `Exibindo ${filteredUsers.length} de ${filteredUsers.length} resultados`;
                 return;
             }
             
-            paginationControls.style.display = 'flex';
-            resultsInfo.textContent = `Exibindo ${startIndex + 1} a ${endIndex} de ${filteredUsers.length} resultados`;
+            if (paginationControls) paginationControls.style.display = 'flex';
+            if (resultsInfo) resultsInfo.textContent = `Exibindo ${startIndex + 1} a ${endIndex} de ${filteredUsers.length} resultados`;
 
             // Botão "Anterior"
             const prevLi = document.createElement('li');
@@ -626,7 +630,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             paginationList.appendChild(prevLi);
 
-            // Botões de página (lógica simplificada para mostrar até 5 botões)
+            // Botões de página
              for (let i = 1; i <= totalPages; i++) {
                 const pageLi = document.createElement('li');
                 pageLi.className = `page-item ${i === currentPage ? 'active' : ''}`;
@@ -663,22 +667,23 @@ document.addEventListener('DOMContentLoaded', () => {
             if (searchTerm) {
                 tempUsers = tempUsers.filter(user =>
                     user.nome.toLowerCase().includes(searchTerm) ||
-                    user.email.toLowerCase().includes(searchTerm) ||
-                    (user.cpf && user.cpf.includes(searchTerm))
+                    user.email.toLowerCase().includes(searchTerm)
                 );
             }
-            if (cargo) {
+            if (cargo && cargo !== 'todos') { // 'todos' é o valor para "sem filtro"
                 tempUsers = tempUsers.filter(user => user.cargo === cargo);
             }
-            if (status) {
+            if (status && status !== 'todos') { // 'todos' é o valor para "sem filtro"
                 tempUsers = tempUsers.filter(user => user.status === status);
             }
 
             tempUsers.sort((a, b) => {
                 const aValue = a[sortColumn];
                 const bValue = b[sortColumn];
-                const comparison = (aValue > bValue) ? 1 : ((bValue > aValue) ? -1 : 0);
-                return sortDirection === 'asc' ? comparison : comparison * -1;
+                if (typeof aValue === 'string') {
+                    return sortDirection === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+                }
+                return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
             });
             
             filteredUsers = tempUsers;
@@ -686,14 +691,9 @@ document.addEventListener('DOMContentLoaded', () => {
             renderTablePage();
         };
 
-        searchInput.addEventListener('input', applyFiltersAndSort);
-        cargoFilter.addEventListener('change', applyFiltersAndSort);
-        statusFilter.addEventListener('change', applyFiltersAndSort);
-        sortSelect.addEventListener('change', applyFiltersAndSort);
-
         const fetchUsers = async () => {
-            loadingIndicator.style.display = 'block';
-            tableBody.innerHTML = '';
+            if(loadingIndicator) loadingIndicator.style.display = 'block';
+            if(tableBody) tableBody.innerHTML = '';
             try {
                 const response = await authenticatedFetch('/usuario');
                 if (!response.ok) throw new Error('Falha ao carregar usuários.');
@@ -701,15 +701,169 @@ document.addEventListener('DOMContentLoaded', () => {
                 applyFiltersAndSort();
             } catch (error) {
                 console.error("Erro ao buscar usuários:", error);
-                tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Erro ao carregar dados.</td></tr>`;
+                if(tableBody) tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Erro ao carregar dados.</td></tr>`;
             } finally {
-                loadingIndicator.style.display = 'none';
+                if(loadingIndicator) loadingIndicator.style.display = 'none';
             }
         };
+        
+        searchInput.addEventListener('input', applyFiltersAndSort);
+        cargoFilter.addEventListener('change', applyFiltersAndSort);
+        statusFilter.addEventListener('change', applyFiltersAndSort);
+        sortSelect.addEventListener('change', applyFiltersAndSort);
 
         fetchUsers();
     }
+
+    // ========================================================================
+    // LÓGICA PARA A TABELA DE PRODUTOS (SEGUINDO O PADRÃO DA DE USUÁRIOS)
+    // ========================================================================
+    if (window.location.pathname.includes('tabela-produto.html')) {
+        let allProducts = [];
+        let filteredProducts = [];
+        let currentPage = 1;
+        const rowsPerPage = 10;
+
+        const tableBody = document.getElementById('product-table-body');
+        const searchInput = document.getElementById('search-input');
+        const sortSelect = document.getElementById('sort-select');
+        const paginationControls = document.getElementById('pagination-controls');
+        const resultsInfo = document.getElementById('results-info');
+        const paginationList = document.getElementById('pagination-list');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const noResults = document.getElementById('no-results');
+        
+        const renderTablePage = () => {
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+            tableBody.innerHTML = '';
+            
+            if (filteredProducts.length === 0) {
+                if (noResults) noResults.style.display = 'block';
+                if (paginationControls) paginationControls.style.display = 'none';
+                return;
+            }
+            if (noResults) noResults.style.display = 'none';
+
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const endIndex = Math.min(startIndex + rowsPerPage, filteredProducts.length);
+            const pageProducts = filteredProducts.slice(startIndex, endIndex);
+
+            pageProducts.forEach(product => {
+                const row = `
+                    <tr>
+                        <td>${product.id}</td>
+                        <td>${product.nome}</td>
+                        <td>${product.descricao || '-'}</td>
+                        <td>${product.tamanho_tanque ? `${product.tamanho_tanque} L` : '-'}</td>
+                        <td class="text-center">
+                            <a href="produto-detalhes.html?id=${product.id}" class="btn btn-sm btn-info" title="Visualizar"><i class="fas fa-eye"></i></a>
+                            <a href="produto-form.html?id=${product.id}" class="btn btn-sm btn-warning" title="Editar"><i class="fas fa-pencil-alt"></i></a>
+                        </td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+            updatePagination(startIndex, endIndex);
+        };
+
+        const updatePagination = (startIndex, endIndex) => {
+            const totalPages = Math.ceil(filteredProducts.length / rowsPerPage);
+            if (paginationList) paginationList.innerHTML = ''; 
+
+            if (totalPages <= 1) {
+                if (paginationControls) paginationControls.style.display = 'none';
+                if (resultsInfo) resultsInfo.textContent = `Exibindo ${filteredProducts.length} de ${filteredProducts.length} resultados`;
+                return;
+            }
+            
+            if (paginationControls) paginationControls.style.display = 'flex';
+            if (resultsInfo) resultsInfo.textContent = `Exibindo ${startIndex + 1} a ${endIndex} de ${filteredProducts.length} resultados`;
+
+            const prevLi = document.createElement('li');
+            prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+            prevLi.innerHTML = `<a class="page-link" href="#">Anterior</a>`;
+            prevLi.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderTablePage();
+                }
+            });
+            paginationList.appendChild(prevLi);
+
+             for (let i = 1; i <= totalPages; i++) {
+                const pageLi = document.createElement('li');
+                pageLi.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                pageLi.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+                pageLi.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    currentPage = i;
+                    renderTablePage();
+                });
+                paginationList.appendChild(pageLi);
+            }
+
+            const nextLi = document.createElement('li');
+            nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+            nextLi.innerHTML = `<a class="page-link" href="#">Próxima</a>`;
+            nextLi.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderTablePage();
+                }
+            });
+            paginationList.appendChild(nextLi);
+        };
+        
+        const applyFiltersAndSort = () => {
+            let tempProducts = [...allProducts];
+            const searchTerm = searchInput.value.toLowerCase();
+            const [sortColumn, sortDirection] = sortSelect.value.split('-');
+
+            if (searchTerm) {
+                tempProducts = tempProducts.filter(product =>
+                    product.nome.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            tempProducts.sort((a, b) => {
+                const aValue = a[sortColumn];
+                const bValue = b[sortColumn];
+                 if (typeof aValue === 'string') {
+                    return sortDirection === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+                }
+                return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+            });
+            
+            filteredProducts = tempProducts;
+            currentPage = 1;
+            renderTablePage();
+        };
+
+        const fetchProducts = async () => {
+            if(loadingIndicator) loadingIndicator.style.display = 'block';
+            if(tableBody) tableBody.innerHTML = '';
+            try {
+                const response = await authenticatedFetch('/produto');
+                if (!response.ok) throw new Error('Falha ao carregar produtos.');
+                allProducts = await response.json();
+                applyFiltersAndSort();
+            } catch (error) {
+                console.error("Erro ao buscar produtos:", error);
+                if(tableBody) tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Erro ao carregar dados.</td></tr>`;
+            } finally {
+                if(loadingIndicator) loadingIndicator.style.display = 'none';
+            }
+        };
+
+        searchInput.addEventListener('input', applyFiltersAndSort);
+        sortSelect.addEventListener('change', applyFiltersAndSort);
+
+        fetchProducts();
+    }
 });
+
 
 
 
