@@ -117,17 +117,17 @@ body, html {
     border-right: 1px solid #dee2e6;
 }
 
-/* telas grandes */
+
 @media (min-width: 992px) {
     #sidebar.offcanvas-lg {
-        position: relative;
+        position: sticky;
+        top: 70px; /* Altura do seu cabeçalho (app-header) */
+        height: calc(100vh - 70px); /* Altura do menu menos a altura do cabeçalho */
+        overflow-y: auto; /* Adiciona uma barra de rolagem se o menu for muito grande */
         transform: none;
         visibility: visible !important;
         transition: none;
         box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-    }
-    .main-container {
-        height: calc(100vh - 70px);
     }
 }
 
