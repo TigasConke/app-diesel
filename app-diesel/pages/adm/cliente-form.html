@@ -86,7 +86,7 @@
                     <fieldset class="mb-4">
                         <legend class="form-section-legend d-flex justify-content-between align-items-center">
                             <span>Propriedades</span>
-                            <button type="button" id="add-property" style="display: none;" class="btn btn-sm btn-outline-primary"><i class="fas fa-plus"></i> Propriedade</button>
+                            <button type="button" id="add-property" class="btn btn-sm btn-outline-primary"><i class="fas fa-plus"></i> Propriedade</button>
                         </legend>
                         <div id="properties-container"></div>
                     </fieldset>
@@ -94,7 +94,7 @@
                     <div id="form-message" class="mt-3"></div>
                     
                     <div class="d-flex justify-content-end mt-4">
-                        <a href="tabela-cliente.html" class="btn btn-secondary me-2">Cancelar</a>
+                        <button type="button" class="btn btn-danger me-2" id="btn-cancelar">Cancelar</button>
                         <button type="submit" class="btn btn-success" id="save-button">Salvar</button>
                     </div>
                 </form>
@@ -112,7 +112,8 @@
 
     <template id="telefone-template">
         <div class="input-group mb-2 dynamic-field">
-            <input type="tel" class="form-control" placeholder="(XX) XXXXX-XXXX" required>
+            <!-- Adicionada a classe 'telefone-input' -->
+            <input type="tel" class="form-control telefone-input" placeholder="(XX) XXXXX-XXXX" required>
             <button type="button" class="btn btn-outline-danger remove-field-btn"><i class="fas fa-trash"></i></button>
         </div>
     </template>
@@ -121,7 +122,7 @@
         <div class="property-item border rounded p-3 mb-3">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <h6 class="mb-0">Nova Propriedade</h6>
-                <!-- <button type="button" class="btn-close remove-property-btn" aria-label="Close"></button> -->
+                <button type="button" class="btn-close remove-property-btn" aria-label="Close"></button>
             </div>
             <div class="mb-3">
                 <label class="form-label">CAD/PRO</label>
@@ -136,7 +137,7 @@
                 </div>
                  <div class="col-md-8 mb-3">
                     <label class="form-label">Logradouro</label>
-                    <input type="text" class="form-control" data-field="logradouro" readonly>
+                    <input type="text" class="form-control" data-field="logradouro">
                 </div>
             </div>
             <div class="row">
@@ -152,7 +153,7 @@
             <div class="row">
                 <div class="col-md-4 mb-3">
                     <label class="form-label">Bairro</label>
-                    <input type="text" class="form-control" data-field="bairro" readonly>
+                    <input type="text" class="form-control" data-field="bairro">
                 </div>
                 <div class="col-md-5 mb-3">
                     <label class="form-label">Cidade</label>
@@ -176,6 +177,7 @@
         </div>
     </template>
 
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="../../bootstrap5/js/bootstrap.bundle.min.js"></script>
     <script src="../../assets/js/cliente-form.js"></script>
     <script src="../../assets/js/forms.js"></script>
