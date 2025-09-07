@@ -1,11 +1,9 @@
-// Espera o documento carregar completamente usando jQuery
 $(document).ready(function() {
 
     // ====================================================================
     // INICIALIZAÇÃO DE COMPONENTES (SELECT2)
     // ====================================================================
 
-    // Select2 para Produtos (múltipla seleção)
     if ($('#produtos').length) {
         $('#produtos').select2({
             placeholder: 'Selecione um ou mais produtos',
@@ -13,36 +11,19 @@ $(document).ready(function() {
         });
     }
 
-    // Select2 para Método de Pagamento (seleção única)
     if ($('#metodo_pagamento').length) {
         $('#metodo_pagamento').select2({
             placeholder: 'Selecione um método de pagamento',
             theme: 'bootstrap-5',
-            minimumResultsForSearch: Infinity // Oculta a caixa de busca
+            minimumResultsForSearch: Infinity 
         });
     }
 
     // ====================================================================
-    // LÓGICA DO FORMULÁRIO DE ORDEM DE SERVIÇO
+    // LÓGICA DE MÁSCARAS PARA CAMPOS (COM DELEGAÇÃO DE EVENTOS)
     // ====================================================================
 
-    // FUNÇÃO PARA CALCULAR O TOTAL DO SERVIÇO
-    function calcularTotal() {
-        const maoDeObra = parseFloat($('#mao_obra').val()) || 0;
-        const deslocamento = parseFloat($('#deslocamento').val()) || 0;
-        const valorPorKm = parseFloat($('#valor_km').val()) || 0;
-        const custoDeslocamento = deslocamento * valorPorKm;
-        const total = maoDeObra + custoDeslocamento;
-        $('#total_servico').val(total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-    }
-
-    // Listener para o cálculo do total
-    $('#mao_obra, #deslocamento, #valor_km').on('input', calcularTotal);
-
-    // ====================================================================
-    // LÓGICA DE MÁSCARAS PARA CAMPOS
-    // ====================================================================
-
+    // Função para máscara de CPF/CNPJ
     const handleCpfCnpjInput = (e) => {
         let value = e.target.value.replace(/\D/g, '');
         if (value.length > 14) value = value.substring(0, 14);
@@ -54,6 +35,7 @@ $(document).ready(function() {
         e.target.value = value;
     };
 
+    // Função para máscara de Telefone
     const handleTelefoneInput = (e) => {
         let value = e.target.value.replace(/\D/g, '');
         if (value.length > 11) value = value.substring(0, 11);
@@ -65,24 +47,24 @@ $(document).ready(function() {
         e.target.value = value;
     };
 
-    const handleRgInput = (e) => {
+    // Função para máscara de CEP
+    const handleCepInput = (e) => {
         let value = e.target.value.replace(/\D/g, '');
-        if (value.length > 9) value = value.substring(0, 9);
-        value = value.replace(/^(\d{2})(\d{3})(\d{3})(\w{1}).*/, '$1.$2.$3-$4');
+        if (value.length > 8) value = value.substring(0, 8);
+        value = value.replace(/^(\d{5})(\d{3}).*/, '$1-$2');
         e.target.value = value;
     };
 
-    // Aplicação inteligente das máscaras a qualquer campo com o ID correspondente
-    if ($('#cpf').length) $('#cpf').on('input', handleCpfCnpjInput);
-    if ($('#cpf_cnpj').length) $('#cpf_cnpj').on('input', handleCpfCnpjInput);
-    if ($('#telefone').length) $('#telefone').on('input', handleTelefoneInput);
-    if ($('#rg').length) $('#rg').on('input', handleRgInput);
+    // Aplicação das máscaras usando delegação de eventos no body.
+    // Isso garante que campos adicionados dinamicamente também recebam a máscara.
+    $(document.body).on('input', '#cpf_cnpj', handleCpfCnpjInput);
+    $(document.body).on('input', '.telefone-input', handleTelefoneInput);
+    $(document.body).on('input', '.cep-input', handleCepInput);
     
     // ====================================================================
     // LÓGICA DE BOTÕES GERAIS
     // ====================================================================
 
-    // Lógica do botão de cancelar (agora usando jQuery e dentro do ready)
     if ($('#btn-cancelar').length) {
         $('#btn-cancelar').on('click', function() {
             if (confirm('Ao cancelar, você perderá todo o progresso do formulário. Deseja realmente sair?')) {
@@ -101,3 +83,4 @@ $(document).ready(function() {
         });
     }
 });
+

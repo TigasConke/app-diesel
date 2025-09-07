@@ -973,6 +973,172 @@ document.addEventListener('DOMContentLoaded', () => {
 
         fetchClients();
     }
+ if (window.location.pathname.includes('tabela-cliente.html')) {
+        let allClients = [];
+        let filteredClients = [];
+        let currentPage = 1;
+        const rowsPerPage = 10;
+
+        const tableBody = document.getElementById('client-table-body');
+        const searchInput = document.getElementById('search-input');
+        const sortSelect = document.getElementById('sort-select');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const noResults = document.getElementById('no-results');
+        const paginationControls = document.getElementById('pagination-controls');
+        const resultsInfo = document.getElementById('results-info');
+        const paginationList = document.getElementById('pagination-list');
+        
+        const formatCpfCnpj = (value) => {
+            const cleanValue = value.replace(/\D/g, '');
+            if (cleanValue.length > 11) {
+                return cleanValue.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2}).*/, '$1.$2.$3/$4-$5');
+            }
+            return cleanValue.replace(/^(\d{3})(\d{3})(\d{3})(\d{2}).*/, '$1.$2.$3-$4');
+        };
+
+        const formatTelefone = (value) => {
+            const cleanValue = value.replace(/\D/g, '');
+            if (cleanValue.length > 10) {
+                return cleanValue.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+            }
+            return cleanValue.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
+        };
+
+        const renderTablePage = () => {
+            if(tableBody) tableBody.innerHTML = '';
+            if(noResults) noResults.style.display = 'none';
+
+            if(filteredClients.length === 0){
+                if(noResults) noResults.style.display = 'block';
+                if(paginationControls) paginationControls.style.display = 'none';
+                return;
+            }
+
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const endIndex = Math.min(startIndex + rowsPerPage, filteredClients.length);
+            const pageClients = filteredClients.slice(startIndex, endIndex);
+
+            pageClients.forEach(client => {
+                const firstTelefone = client.telefones && client.telefones.length > 0 
+                    ? formatTelefone(client.telefones[0].descricao) 
+                    : '-';
+
+                const row = `
+                    <tr>
+                        <td>${client.id}</td>
+                        <td>${client.nome}</td>
+                        <td>${formatCpfCnpj(client.cpf_cnpj)}</td>
+                        <td>${firstTelefone}</td>
+                        <td class="text-center">
+                            <a href="cliente-detalhes.html?id=${client.id}" class="btn btn-sm btn-info" title="Visualizar"><i class="fas fa-eye"></i></a>
+                            <a href="cliente-form.html?id=${client.id}" class="btn btn-sm btn-warning" title="Editar"><i class="fas fa-pencil-alt"></i></a>
+                        </td>
+                    </tr>
+                `;
+                if(tableBody) tableBody.innerHTML += row;
+            });
+            updatePagination(startIndex, endIndex);
+        };
+
+        const updatePagination = (startIndex, endIndex) => {
+            const totalPages = Math.ceil(filteredClients.length / rowsPerPage);
+            if(paginationList) paginationList.innerHTML = '';
+
+            if (totalPages <= 1) {
+                if(paginationControls) paginationControls.style.display = 'none';
+                if(resultsInfo) resultsInfo.textContent = `Exibindo ${filteredClients.length} de ${filteredClients.length} resultados`;
+                return;
+            }
+
+            if(paginationControls) paginationControls.style.display = 'flex';
+            if(resultsInfo) resultsInfo.textContent = `Exibindo ${startIndex + 1} a ${endIndex} de ${filteredClients.length} resultados`;
+
+            // Botão "Anterior"
+            const prevLi = document.createElement('li');
+            prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+            prevLi.innerHTML = `<a class="page-link" href="#">Anterior</a>`;
+            prevLi.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderTablePage();
+                }
+            });
+            paginationList.appendChild(prevLi);
+
+            // Botões de página
+            for (let i = 1; i <= totalPages; i++) {
+                const pageLi = document.createElement('li');
+                pageLi.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                pageLi.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+                pageLi.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    currentPage = i;
+                    renderTablePage();
+                });
+                paginationList.appendChild(pageLi);
+            }
+
+            // Botão "Próxima"
+            const nextLi = document.createElement('li');
+            nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+            nextLi.innerHTML = `<a class="page-link" href="#">Próxima</a>`;
+            nextLi.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderTablePage();
+                }
+            });
+            paginationList.appendChild(nextLi);
+        };
+        
+        const applyFiltersAndSort = () => {
+            let tempClients = [...allClients];
+            if(searchInput){
+                const searchTerm = searchInput.value.toLowerCase();
+                 tempClients = tempClients.filter(client =>
+                    client.nome.toLowerCase().includes(searchTerm) ||
+                    (client.cpf_cnpj && client.cpf_cnpj.includes(searchTerm))
+                );
+            }
+
+            if(sortSelect){
+                const [sortColumn, sortDirection] = sortSelect.value.split('-');
+                tempClients.sort((a,b) => {
+                    const aValue = a[sortColumn];
+                    const bValue = b[sortColumn];
+                    const comparison = (aValue > bValue) ? 1 : ((bValue > aValue) ? -1 : 0);
+                    return sortDirection === 'asc' ? comparison : comparison * -1;
+                });
+            }
+
+            filteredClients = tempClients;
+            currentPage = 1;
+            renderTablePage();
+        };
+
+        const fetchClients = async () => {
+            if(loadingIndicator) loadingIndicator.style.display = 'block';
+            if(tableBody) tableBody.innerHTML = '';
+            try {
+                const response = await authenticatedFetch('/cliente');
+                if (!response.ok) throw new Error('Falha ao carregar clientes.');
+                allClients = await response.json();
+                applyFiltersAndSort();
+            } catch (error) {
+                console.error("Erro ao buscar clientes:", error);
+                 if(tableBody) tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Erro ao carregar dados.</td></tr>`;
+            } finally {
+                if(loadingIndicator) loadingIndicator.style.display = 'none';
+            }
+        };
+
+        if(searchInput) searchInput.addEventListener('input', applyFiltersAndSort);
+        if(sortSelect) sortSelect.addEventListener('change', applyFiltersAndSort);
+
+        fetchClients();
+    }
 });
 
 

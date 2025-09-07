@@ -19,7 +19,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
+    // --- FUNÇÕES DE FORMATAÇÃO ---
+    const formatCpfCnpj = (value) => {
+        if (!value) return '-';
+        const cleanValue = String(value).replace(/\D/g, '');
+        if (cleanValue.length > 11) { // CNPJ
+            return cleanValue.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+        }
+        // CPF
+        return cleanValue.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    };
+
+    const formatCep = (value) => {
+        if (!value) return '-';
+        const cleanValue = String(value).replace(/\D/g, '');
+        if (cleanValue.length === 8) {
+            return cleanValue.replace(/^(\d{5})(\d{3})/, '$1-$2');
+        }
+        return cleanValue;
+    };
+
     const formatTelefone = (tel) => {
+        if (!tel) return '-';
         const value = tel.replace(/\D/g, '');
         if (value.length > 10) {
             return value.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
@@ -28,9 +49,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const fetchAddressFromViaCEP = async (cep) => {
-        if (!cep || cep.length !== 8) return { logradouro: 'Não informado', bairro: 'Não informado' };
+        if (!cep || cep.replace(/\D/g, '').length !== 8) return { logradouro: 'Não informado', bairro: 'Não informado' };
         try {
-            const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+            const response = await fetch(`https://viacep.com.br/ws/${cep.replace(/\D/g, '')}/json/`);
             const data = await response.json();
             if (data.erro) return { logradouro: 'CEP não encontrado', bairro: '' };
             return data;
@@ -47,18 +68,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (clients.length === 0) throw new Error('Cliente não encontrado.');
         const client = clients[0];
 
-        // Preenche dados principais
+        // Preenche dados principais com formatação
         detailNome.textContent = client.nome;
-        detailCpfCnpj.textContent = client.cpf_cnpj;
+        detailCpfCnpj.textContent = formatCpfCnpj(client.cpf_cnpj);
 
         // Preenche emails
-        emailsList.innerHTML = '<h6>Emails:</h6>';
+        emailsList.innerHTML = '<h6>Email(s):</h6>';
         client.emails.forEach(email => {
             emailsList.innerHTML += `<p class="mb-1">${email.descricao}</p>`;
         });
 
-        // Preenche telefones
-        telefonesList.innerHTML = '<h6>Telefones:</h6>';
+        // Preenche telefones com formatação
+        telefonesList.innerHTML = '<h6>Telefone(s):</h6>';
         client.telefones.forEach(tel => {
             telefonesList.innerHTML += `<p class="mb-1">${formatTelefone(tel.descricao)}</p>`;
         });
@@ -77,7 +98,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 clone.querySelector('.prop-bairro').textContent = viaCepData.bairro || prop.endereco.bairro || '-';
                 clone.querySelector('.prop-cidade').textContent = prop.endereco.cidade.descricao || '-';
                 clone.querySelector('.prop-uf').textContent = prop.endereco.uf.descricao || '-';
-                clone.querySelector('.prop-cep').textContent = prop.endereco.cep || '-';
+                clone.querySelector('.prop-cep').textContent = formatCep(prop.endereco.cep) || '-'; // Formata o CEP
                 clone.querySelector('.prop-lat').textContent = prop.endereco.lat || '-';
                 clone.querySelector('.prop-long').textContent = prop.endereco.long || '-';
                 propertiesList.appendChild(clone);
