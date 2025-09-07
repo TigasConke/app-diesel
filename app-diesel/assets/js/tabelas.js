@@ -862,7 +862,120 @@ document.addEventListener('DOMContentLoaded', () => {
 
         fetchProducts();
     }
+   // ==========================================================
+    // LÓGICA PARA A TABELA DE CLIENTES
+    // ==========================================================
+    if (window.location.pathname.includes('tabela-cliente.html')) {
+        let allClients = [];
+        let filteredClients = [];
+        let currentPage = 1;
+        const rowsPerPage = 10;
+
+        const tableBody = document.getElementById('client-table-body');
+        const searchInput = document.getElementById('search-input');
+        const sortSelect = document.getElementById('sort-select');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const noResults = document.getElementById('no-results');
+        const paginationControls = document.getElementById('pagination-controls');
+        const resultsInfo = document.getElementById('results-info');
+        const paginationList = document.getElementById('pagination-list');
+        
+        const renderTablePage = () => {
+            if(tableBody) tableBody.innerHTML = '';
+            if(noResults) noResults.style.display = 'none';
+
+            if(filteredClients.length === 0){
+                if(noResults) noResults.style.display = 'block';
+                if(paginationControls) paginationControls.style.display = 'none';
+                return;
+            }
+
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const endIndex = Math.min(startIndex + rowsPerPage, filteredClients.length);
+            const pageClients = filteredClients.slice(startIndex, endIndex);
+
+            pageClients.forEach(client => {
+                const row = `
+                    <tr>
+                        <td>${client.id}</td>
+                        <td>${client.nome}</td>
+                        <td>${client.cpf_cnpj}</td>
+                        <td class="text-center">
+                            <a href="cliente-detalhes.html?id=${client.id}" class="btn btn-sm btn-info" title="Visualizar"><i class="fas fa-eye"></i></a>
+                            <a href="cliente-form.html?id=${client.id}" class="btn btn-sm btn-warning" title="Editar"><i class="fas fa-pencil-alt"></i></a>
+                        </td>
+                    </tr>
+                `;
+                if(tableBody) tableBody.innerHTML += row;
+            });
+            updatePagination(startIndex, endIndex);
+        };
+
+        const updatePagination = (startIndex, endIndex) => {
+            const totalPages = Math.ceil(filteredClients.length / rowsPerPage);
+            if(paginationList) paginationList.innerHTML = '';
+
+            if (totalPages <= 1) {
+                if(paginationControls) paginationControls.style.display = 'none';
+                if(resultsInfo) resultsInfo.textContent = `Exibindo ${filteredClients.length} de ${filteredClients.length} resultados`;
+                return;
+            }
+
+            if(paginationControls) paginationControls.style.display = 'flex';
+            if(resultsInfo) resultsInfo.textContent = `Exibindo ${startIndex + 1} a ${endIndex} de ${filteredClients.length} resultados`;
+
+            // ... (lógica completa de criação dos botões de paginação, igual a dos usuários)
+        };
+        
+        const applyFiltersAndSort = () => {
+            let tempClients = [...allClients];
+            if(searchInput){
+                const searchTerm = searchInput.value.toLowerCase();
+                 tempClients = tempClients.filter(client =>
+                    client.nome.toLowerCase().includes(searchTerm) ||
+                    (client.cpf_cnpj && client.cpf_cnpj.includes(searchTerm))
+                );
+            }
+
+            if(sortSelect){
+                const [sortColumn, sortDirection] = sortSelect.value.split('-');
+                tempClients.sort((a,b) => {
+                    const aValue = a[sortColumn];
+                    const bValue = b[sortColumn];
+                    const comparison = (aValue > bValue) ? 1 : ((bValue > aValue) ? -1 : 0);
+                    return sortDirection === 'asc' ? comparison : comparison * -1;
+                });
+            }
+
+            filteredClients = tempClients;
+            currentPage = 1;
+            renderTablePage();
+        };
+
+        const fetchClients = async () => {
+            if(loadingIndicator) loadingIndicator.style.display = 'block';
+            if(tableBody) tableBody.innerHTML = '';
+            try {
+                const response = await authenticatedFetch('/cliente');
+                if (!response.ok) throw new Error('Falha ao carregar clientes.');
+                allClients = await response.json();
+                applyFiltersAndSort();
+            } catch (error) {
+                console.error("Erro ao buscar clientes:", error);
+                 if(tableBody) tableBody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Erro ao carregar dados.</td></tr>`;
+            } finally {
+                if(loadingIndicator) loadingIndicator.style.display = 'none';
+            }
+        };
+
+        if(searchInput) searchInput.addEventListener('input', applyFiltersAndSort);
+        if(sortSelect) sortSelect.addEventListener('change', applyFiltersAndSort);
+
+        fetchClients();
+    }
 });
+
+
 
 
 
