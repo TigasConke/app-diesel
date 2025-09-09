@@ -76,6 +76,8 @@ $(document).ready(function() {
                     window.location.href = 'tabela-user.html';
                 } else if (window.location.href.includes('produto-form.html')) {
                     window.location.href = 'tabela-produto.html';
+                } else if (window.location.href.includes('servico-form.html')) {
+                    window.location.href = 'tabela-servico.html';
                 } else {
                     window.location.href = 'index.html'; // Página padrão
                 }

@@ -23,6 +23,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const telefoneTemplate = document.getElementById('telefone-template');
     const propertyTemplate = document.getElementById('property-template');
 
+    // ---- INÍCIO DA ALTERAÇÃO ----
+    // Mapa de siglas de estados para nomes completos
+    const stateMap = {
+        'AC': 'Acre', 'AL': 'Alagoas', 'AP': 'Amapá', 'AM': 'Amazonas', 'BA': 'Bahia',
+        'CE': 'Ceará', 'DF': 'Distrito Federal', 'ES': 'Espírito Santo', 'GO': 'Goiás',
+        'MA': 'Maranhão', 'MT': 'Mato Grosso', 'MS': 'Mato Grosso do Sul', 'MG': 'Minas Gerais',
+        'PA': 'Pará', 'PB': 'Paraíba', 'PR': 'Paraná', 'PE': 'Pernambuco', 'PI': 'Piauí',
+        'RJ': 'Rio de Janeiro', 'RN': 'Rio Grande do Norte', 'RS': 'Rio Grande do Sul',
+        'RO': 'Rondônia', 'RR': 'Roraima', 'SC': 'Santa Catarina', 'SP': 'São Paulo',
+        'SE': 'Sergipe', 'TO': 'Tocantins'
+    };
+    // ---- FIM DA ALTERAÇÃO ----
+
     // Função de máscara de telefone
     const handleTelefoneInput = (e) => {
         let value = e.target.value.replace(/\D/g, '');
@@ -102,7 +115,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         propertyItem.querySelector('[data-field="logradouro"]').value = data.logradouro;
                         propertyItem.querySelector('[data-field="bairro"]').value = data.bairro;
                         propertyItem.querySelector('[data-field="cidade"]').value = data.localidade;
-                        propertyItem.querySelector('[data-field="uf"]').value = data.uf;
+                        // ---- INÍCIO DA ALTERAÇÃO ----
+                        propertyItem.querySelector('[data-field="uf"]').value = stateMap[data.uf] || data.uf;
+                        // ---- FIM DA ALTERAÇÃO ----
                     }
                 } catch (error) {
                     console.error("Erro ao buscar CEP:", error);
@@ -113,13 +128,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const loadClientData = async () => {
         if (!isEditMode) {
-             // ---- INÍCIO DA ALTERAÇÃO ----
             // Se não for edição, adiciona um campo de cada por padrão
             addField(emailTemplate, emailsContainer);
             const newPhoneField = addField(telefoneTemplate, telefonesContainer);
             newPhoneField.querySelector('input').addEventListener('input', handleTelefoneInput);
             addProperty();
-            // ---- FIM DA ALTERAÇÃO ----
             return;
         }
 
@@ -185,21 +198,27 @@ document.addEventListener('DOMContentLoaded', () => {
             emails: Array.from(emailsContainer.querySelectorAll('input')).map(input => ({ descricao: input.value })),
             telefones: Array.from(telefonesContainer.querySelectorAll('input')).map(input => ({ descricao: input.value.replace(/\D/g, '') })),
             propriedades: Array.from(propertiesContainer.querySelectorAll('.property-item')).map(item => {
-                const property = {
-                    cadpro: item.querySelector('[data-field="cadpro"]').value,
-                    endereco: {
-                        cep: item.querySelector('[data-field="cep"]').value.replace(/\D/g, ''),
-                        logradouro: item.querySelector('[data-field="logradouro"]').value,
-                        numero: getNumericValue(item.querySelector('[data-field="numero"]')),
-                        complemento: item.querySelector('[data-field="complemento"]').value,
-                        bairro: item.querySelector('[data-field="bairro"]').value,
-                        cidade: { descricao: item.querySelector('[data-field="cidade"]').value },
-                        uf: { descricao: item.querySelector('[data-field="uf"]').value },
-                        lat: getNumericValue(item.querySelector('[data-field="lat"]')),
-                        long: getNumericValue(item.querySelector('[data-field="long"]'))
-                    }
+                const complementoValue = item.querySelector('[data-field="complemento"]').value;
+                const endereco = {
+                    cep: item.querySelector('[data-field="cep"]').value.replace(/\D/g, ''),
+                    logradouro: item.querySelector('[data-field="logradouro"]').value,
+                    numero: getNumericValue(item.querySelector('[data-field="numero"]')),
+                    bairro: item.querySelector('[data-field="bairro"]').value,
+                    cidade: { descricao: item.querySelector('[data-field="cidade"]').value },
+                    uf: { descricao: item.querySelector('[data-field="uf"]').value },
+                    lat: getNumericValue(item.querySelector('[data-field="lat"]')),
+                    long: getNumericValue(item.querySelector('[data-field="long"]'))
                 };
-
+                // Só adiciona complemento se não for vazio
+                if (complementoValue && complementoValue.trim() !== "") {
+                    endereco.complemento = complementoValue;
+                } else {
+                    endereco.complemento = null; // ou simplesmente não adiciona a linha para não enviar
+                }
+                const property = {
+                    cadpro: item.querySelector('[data-field="cadpro"]').value.replace(/\D/g, ''),
+                    endereco
+                };
                 if (item.dataset.propertyId) {
                     property.id = parseInt(item.dataset.propertyId, 10);
                 }
@@ -240,4 +259,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loadClientData();
 });
-
