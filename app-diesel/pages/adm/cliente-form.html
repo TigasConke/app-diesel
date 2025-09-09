@@ -43,6 +43,7 @@
                         <a class="nav-link active" href="tabela-cliente.html"><i class="fas fa-users"></i> Clientes</a>
                         <a class="nav-link" href="tabela-user.html"><i class="fas fa-user-friends"></i> Usuários</a>
                         <a class="nav-link" href="tabela-produto.html"><i class="fa-solid fa-box-open"></i> Produtos</a>
+                        <a class="nav-link" href="tabela-servico.html"><i class="fa-solid fa-gear"></i> Serviços</a>
                         <a class="nav-link" href="tabela-relatorio.html"><i class="fas fa-chart-bar"></i> Relatórios</a>
                     </nav>
                 </aside>
@@ -126,7 +127,7 @@
             </div>
             <div class="mb-3">
                 <label class="form-label">CAD/PRO</label>
-                <input type="text" class="form-control" data-field="cadpro" required>
+                <input type="text" class="form-control" data-field="cadpro" oninput="this.value = this.value.replace(/\D/g, '')" required>
             </div>
             <hr>
             <h6>Endereço</h6>
