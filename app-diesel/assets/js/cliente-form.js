@@ -1,3 +1,122 @@
+// Preenche UF automaticamente com a sigla ao usar CEP (ViaCep)
+(function () {
+    function normalizeText(s) {
+        return String(s || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toUpperCase()
+            .replace(/[^A-Z\s]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    function estadoParaUF(nomeOuSigla) {
+        if (!nomeOuSigla) return '';
+        const v = String(nomeOuSigla).trim().toUpperCase();
+        if (/^[A-Z]{2}$/.test(v)) return v; // já é sigla
+
+        const map = {
+            'ACRE': 'AC',
+            'ALAGOAS': 'AL',
+            'AMAPA': 'AP',
+            'AMAPÁ': 'AP',
+            'AMAZONAS': 'AM',
+            'BAHIA': 'BA',
+            'CEARA': 'CE',
+            'CEARÁ': 'CE',
+            'DISTRITO FEDERAL': 'DF',
+            'ESPIRITO SANTO': 'ES',
+            'ESPÍRITO SANTO': 'ES',
+            'GOIAS': 'GO',
+            'GOIÁS': 'GO',
+            'MARANHAO': 'MA',
+            'MARANHÃO': 'MA',
+            'MATO GROSSO': 'MT',
+            'MATO GROSSO DO SUL': 'MS',
+            'MINAS GERAIS': 'MG',
+            'PARA': 'PA',
+            'PARÁ': 'PA',
+            'PARAIBA': 'PB',
+            'PARAÍBA': 'PB',
+            'PARANA': 'PR',
+            'PARANÁ': 'PR',
+            'PERNAMBUCO': 'PE',
+            'PIAUI': 'PI',
+            'PIAUÍ': 'PI',
+            'RIO DE JANEIRO': 'RJ',
+            'RIO GRANDE DO NORTE': 'RN',
+            'RIO GRANDE DO SUL': 'RS',
+            'RONDONIA': 'RO',
+            'RONDÔNIA': 'RO',
+            'RORAIMA': 'RR',
+            'SANTA CATARINA': 'SC',
+            'SAO PAULO': 'SP',
+            'SÃO PAULO': 'SP',
+            'SERGIPE': 'SE',
+            'TOCANTINS': 'TO'
+        };
+        const key = map[v] ? v : normalizeText(v);
+        return map[key] || '';
+    }
+
+    function toUfSigla(value) {
+        const sigla = estadoParaUF(value);
+        return sigla || String(value || '')
+            .toUpperCase()
+            .replace(/[^A-Z]/g, '')
+            .slice(0, 2);
+    }
+
+    function findUfInput(startEl) {
+        const scope = (startEl && startEl.closest && startEl.closest('form')) || document;
+        return scope.querySelector('input[name$="[uf]"], input[name="uf"], input#uf');
+    }
+
+    async function preencherUFPorCEP(cepInput) {
+        if (!cepInput) return;
+        const raw = (cepInput.value || '').replace(/\D/g, '');
+        if (raw.length !== 8) return;
+        try {
+            const res = await fetch(`https://viacep.com.br/ws/${raw}/json/`);
+            const data = await res.json();
+            if (data && !data.erro) {
+                const ufValue = data.estado || data.state || data.uf || '';
+                const ufSigla = toUfSigla(ufValue);
+                const ufInput = findUfInput(cepInput);
+                if (ufInput && ufSigla) {
+                    ufInput.value = ufSigla;
+                }
+            }
+        } catch (e) {
+            // Silencioso: manter UX leve se ViaCep falhar
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.querySelector('#cliente-form') || document.querySelector('form[data-entity="cliente"], form[name="cliente-form"]');
+
+        const cepSelectors = 'input[name$="[cep]"], input[name="cep"], input#cep';
+        const scope = form || document;
+        scope.querySelectorAll(cepSelectors).forEach((cepInput) => {
+            cepInput.addEventListener('blur', () => preencherUFPorCEP(cepInput));
+            cepInput.addEventListener('change', () => preencherUFPorCEP(cepInput));
+        });
+
+        // Normaliza UF durante digitação e garante 2 letras
+        scope.querySelectorAll('input[name$="[uf]"], input[name="uf"], input#uf').forEach((ufInput) => {
+            ufInput.setAttribute('maxlength', '2');
+            ufInput.addEventListener('input', () => {
+                const val = ufInput.value || '';
+                if (val.length !== 2 || /[^A-Za-z]/.test(val)) {
+                    ufInput.value = toUfSigla(val);
+                } else {
+                    ufInput.value = val.toUpperCase();
+                }
+            });
+        });
+    });
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
     const clientId = params.get('id');
@@ -75,15 +194,23 @@ document.addEventListener('DOMContentLoaded', () => {
         newItem.querySelector('[data-field="complemento"]').value = endereco.complemento || '';
         newItem.querySelector('[data-field="bairro"]').value = endereco.bairro || '';
         newItem.querySelector('[data-field="cidade"]').value = endereco.cidade?.descricao || '';
-        newItem.querySelector('[data-field="uf"]').value = endereco.uf?.descricao || '';
+        const ufInicial = endereco.uf?.descricao || '';
+        newItem.querySelector('[data-field="uf"]').value = (ufInicial || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 2);
         newItem.querySelector('[data-field="lat"]').value = endereco.lat || '';
         newItem.querySelector('[data-field="long"]').value = endereco.long || '';
         
         propertiesContainer.appendChild(newItem);
+        // Normaliza digitação da UF (sempre 2 letras maiúsculas)
+        const ufEl = newItem.querySelector('[data-field="uf"]');
+        if (ufEl) {
+            ufEl.setAttribute('maxlength', '2');
+            ufEl.addEventListener('input', () => {
+                ufEl.value = (ufEl.value || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 2);
+            });
+        }
         return newItem;
     };
 
-    // Event Listeners para adicionar campos
     addEmailBtn.addEventListener('click', () => addField(emailTemplate, emailsContainer));
     addTelefoneBtn.addEventListener('click', () => {
         const newField = addField(telefoneTemplate, telefonesContainer);
@@ -92,7 +219,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     addPropertyBtn.addEventListener('click', () => addProperty());
 
-    // Event listener para remover campos
     document.addEventListener('click', (e) => {
         if (e.target.closest('.remove-field-btn')) {
             e.target.closest('.dynamic-field').remove();
@@ -115,14 +241,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         propertyItem.querySelector('[data-field="logradouro"]').value = data.logradouro;
                         propertyItem.querySelector('[data-field="bairro"]').value = data.bairro;
                         propertyItem.querySelector('[data-field="cidade"]').value = data.localidade;
-                        // ---- INÍCIO DA ALTERAÇÃO ----
-                        propertyItem.querySelector('[data-field="uf"]').value = stateMap[data.uf] || data.uf;
-                        // ---- FIM DA ALTERAÇÃO ----
+                        // Garante UF como sigla (2 letras)
+                        propertyItem.querySelector('[data-field="uf"]').value = (data.uf || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 2);
                     }
                 } catch (error) {
                     console.error("Erro ao buscar CEP:", error);
                 }
             }
+        } else if (e.target && e.target.matches('[data-field="uf"]')) {
+            const ufEl = e.target;
+            ufEl.value = (ufEl.value || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 2);
         }
     });
 

@@ -11,19 +11,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const nomeInput = document.getElementById('nome');
     const descricaoInput = document.getElementById('descricao');
     const tamanhoTanqueInput = document.getElementById('tamanho_tanque');
+    const valorInput = document.getElementById('valor');
 
-    // --- INÍCIO DA CORREÇÃO ---
-    // Adiciona um "ouvinte" para validar a descrição em tempo real
+    // Validação dinâmica do campo Valor
+    const validateValor = () => {
+        const raw = (valorInput.value || '').trim();
+        if (!raw) { valorInput.setCustomValidity('Obrigatório'); return; }
+        const normalized = raw.replace(/\s+/g, '').replace(/\./g, '').replace(',', '.');
+        const num = Number(normalized);
+        if (isNaN(num) || num < 0) {
+            valorInput.setCustomValidity('Valor inválido');
+        } else {
+            valorInput.setCustomValidity('');
+        }
+    };
+    valorInput.addEventListener('input', validateValor);
+    valorInput.addEventListener('blur', validateValor);
+
     descricaoInput.addEventListener('input', () => {
-        // Se o campo tem algo digitado, mas menos de 3 caracteres, ele é inválido
         if (descricaoInput.value.length > 0 && descricaoInput.value.length < 3) {
             descricaoInput.setCustomValidity("A descrição precisa ter no mínimo 3 caracteres.");
         } else {
-            // Se estiver vazio ou com 3+ caracteres, é válido
             descricaoInput.setCustomValidity("");
         }
     });
-    // --- FIM DA CORREÇÃO ---
 
     const setupFormForEdit = async () => {
         if (!isEditMode) return;
@@ -44,6 +55,12 @@ document.addEventListener('DOMContentLoaded', () => {
             nomeInput.value = product.nome;
             descricaoInput.value = product.descricao || '';
             tamanhoTanqueInput.value = product.tamanho_tanque || '';
+            if (product.valor !== undefined && product.valor !== null) {
+                const num = Number(product.valor);
+                valorInput.value = isNaN(num)
+                    ? String(product.valor)
+                    : num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
 
         } catch (error) {
             console.error('Erro ao carregar produto:', error);
@@ -75,6 +92,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const tamanhoTanqueValue = tamanhoTanqueInput.value;
         if (tamanhoTanqueValue && parseFloat(tamanhoTanqueValue) >= 0) {
             productData.tamanho_tanque = parseFloat(tamanhoTanqueValue);
+        }
+
+        // Normaliza e inclui o valor
+        validateValor();
+        const rawValor = (valorInput.value || '').trim().replace(/\s+/g, '').replace(/\./g, '').replace(',', '.');
+        const parsedValor = parseFloat(rawValor);
+        if (!isNaN(parsedValor) && parsedValor >= 0) {
+            productData.valor = parsedValor;
         }
 
         const method = isEditMode ? 'PUT' : 'POST';

@@ -24,6 +24,17 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('detail-nome').textContent = product.nome;
             document.getElementById('detail-descricao').textContent = product.descricao || 'Não informado';
             document.getElementById('detail-tamanho-tanque').textContent = product.tamanho_tanque ? `${product.tamanho_tanque} Litros` : 'Não aplicável';
+            const valorEl = document.getElementById('detail-valor');
+            if (valorEl) {
+                if (product.valor !== undefined && product.valor !== null) {
+                    const num = Number(product.valor);
+                    valorEl.textContent = isNaN(num)
+                        ? String(product.valor)
+                        : num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                } else {
+                    valorEl.textContent = 'Não informado';
+                }
+            }
             
             loadingIndicator.style.display = 'none';
             detailsContainer.style.display = 'block';
