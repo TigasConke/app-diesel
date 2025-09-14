@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes da Ordem de Serviço</title>
+
+    <link rel="stylesheet" href="../../bootstrap5/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <link rel="stylesheet" href="../../assets/css/forms.css"> 
+</head>
+<body>
+    <header id="app-header" class="d-flex justify-content-between align-items-center px-3">
+        <!-- Header will be loaded by menu.js -->
+    </header>
+
+    <div class="main-container d-lg-flex">
+        <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+            <!-- Sidebar will be loaded by menu.js -->
+        </div>
+        
+        <main class="main-content main-content-form">
+            <div id="loading-indicator" class="text-center mt-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+            </div>
+
+            <div id="details-container" class="form-card d-none">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="form-title" id="os-title">Ordem de Serviço #<span id="os-id"></span></h2>
+                    <div>
+                        <button id="print-btn" class="btn btn-secondary"><i class="fas fa-print me-2"></i>Imprimir</button>
+                        <a id="edit-btn" href="#" class="btn btn-warning"><i class="fas fa-pencil-alt me-2"></i>Editar</a>
+                    </div>
+                </div>
+
+                <!-- Informações do Cliente e Propriedade -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-user-tie me-2"></i>Informações do Cliente</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Cliente:</strong> <span id="cliente-nome"></span></p>
+                                <p><strong>CPF/CNPJ:</strong> <span id="cliente-cpfcnpj"></span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Propriedade:</strong> <span id="propriedade-descricao"></span></p>
+                                <p><strong>CAD/PRO:</strong> <span id="propriedade-cadpro"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detalhes da OS -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-info-circle me-2"></i>Detalhes da Ordem de Serviço</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <p><strong>Status:</strong> <span id="os-status" class="badge"></span></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Responsável:</strong> <span id="os-responsavel"></span></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Data de Abertura:</strong> <span id="os-data"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Listas de Serviços e Produtos -->
+                <div class="row">
+                    <!-- Serviços -->
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6><i class="fas fa-cogs me-2"></i>Serviços Prestados</h6>
+                            </div>
+                            <ul id="servicos-list" class="list-group list-group-flush">
+                                <!-- Itens inseridos via JS -->
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- Produtos -->
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6><i class="fas fa-box me-2"></i>Produtos Utilizados</h6>
+                            </div>
+                             <div class="table-responsive">
+                                <table class="table table-sm mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Produto</th>
+                                            <th class="text-center">Qtd.</th>
+                                            <th class="text-end">Vlr. Unit.</th>
+                                            <th class="text-end">Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="produtos-list">
+                                        <!-- Itens inseridos via JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumo Financeiro -->
+                 <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-dollar-sign me-2"></i>Resumo Financeiro</h5>
+                    </div>
+                    <div class="card-body">
+                       <div class="row text-end">
+                           <div class="col-md-8">
+                               <p class="mb-2"><strong>Valor Mão de Obra:</strong></p>
+                               <p class="mb-2"><strong>Valor Deslocamento:</strong></p>
+                               <p class="mb-2"><strong>Valor Total Produtos:</strong></p>
+                               <hr>
+                               <h5 class="mb-0"><strong>VALOR TOTAL DA OS:</strong></h5>
+                           </div>
+                           <div class="col-md-4">
+                                <p class="mb-2"><span id="valor-mo"></span></p>
+                                <p class="mb-2"><span id="valor-deslocamento"></span></p>
+                                <p class="mb-2"><span id="valor-produtos"></span></p>
+                                <hr>
+                                <h5 class="mb-0 text-success"><strong id="valor-total"></strong></h5>
+                           </div>
+                       </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-start mt-4">
+                    <a href="tabela-os.html" class="btn btn-secondary">Voltar para a Lista</a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../assets/js/auth.js"></script>
+    <script src="../../assets/js/menu.js"></script>
+    <script src="../../bootstrap5/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="../../assets/js/os-detalhes.js"></script> 
+</body>
+</html>
