@@ -371,10 +371,13 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const result = await response.json();
             if (response.ok) {
-                formMessage.innerHTML = `<div class="alert alert-success">Cliente salvo com sucesso! Redirecionando...</div>`;
+                formMessage.innerHTML = `<div class="alert alert-success">Cliente salvo com sucesso!</div>`;
+                localStorage.setItem('clienteAtualizado', 'true');
                 setTimeout(() => {
-                    window.location.href = `cliente-detalhes.html?id=${result.id}`;
-                }, 1500);
+                    window.close();
+                    window.location.href = 'tabela-cliente.html';
+             }, 1000);
+
             } else {
                 const errorMessage = Array.isArray(result.message) ? result.message.join('<br>') : (result.message || 'Erro desconhecido.');
                 formMessage.innerHTML = `<div class="alert alert-danger">${errorMessage}</div>`;
